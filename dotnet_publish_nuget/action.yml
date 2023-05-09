@@ -1,5 +1,5 @@
 name: .Net Publish NuGet package
-description:
+description: Pack, create a GitHub release, publish to GitHub Packages, publish to NuGet
 
 inputs:
   version:
@@ -19,7 +19,7 @@ inputs:
     required: true
   create_github_release:
     description: If true a GitHub release will be created, with the NuGet package attached
-    default: false
+    default: "false"
   github_release_git_tag:
     description: The tag to use for the GitHub release. Required if create_github_release is true
     default: ""
@@ -30,7 +30,7 @@ inputs:
     description: The GitHub repository owner
     required: true
   publish_to_github_packages:
-    default: false
+    default: "false"
   github_token:
     default: ""
   publish_to_nuget:
@@ -42,31 +42,44 @@ runs:
   using: "composite"
   steps:
     - name: Check github_release_git_tag requirement
-      if: inputs.create_github_release && github_release_git_tag == ""
       shell: pwsh
       run: |
-        Write-Host "github_release_git_tag should be set if create_github_release is true"
-        exit 1
+        if (($env:create_github_release -eq 'true') -and -not $env:github_release_git_tag) {
+          Write-Host "github_release_git_tag should be set if create_github_release is true"
+          exit 1
+        }
+      env:
+        create_github_release: ${{ inputs.create_github_release }}
+        github_release_git_tag: ${{ inputs.github_release_git_tag }}
 
     - name: Check github_token requirement
-      if: (inputs.publish_to_github_packages || inputs.create_github_release) && github_token == ""
       shell: pwsh
       run: |
-        Write-Host "github_token should be set if publish_to_github_packages is true"
-        exit 1
+        if (($env:publish_to_github_packages -eq 'true' -or $env:create_github_release -eq 'true') -and -not $env:github_token) {
+          Write-Host "github_token should be set if publish_to_github_packages or create_github_release is true"
+          exit 1
+        }
+      env:
+        publish_to_github_packages: ${{ inputs.publish_to_github_packages }}
+        create_github_release: ${{ inputs.create_github_release }}
+        github_token: ${{ inputs.github_token }}
 
     - name: Check nuget_api_key requirement
-      if: inputs.publish_to_nuget && nuget_api_key == ""
       shell: pwsh
       run: |
-        Write-Host "nuget_api_key should be set if publish_to_nuget is true"
-        exit 1
+        if (($env:publish_to_nuget -eq 'true') -and -not $env:nuget_api_key) {
+          Write-Host "nuget_api_key should be set if publish_to_nuget is true"
+          exit 1
+        }
+      env:
+        publish_to_nuget: ${{ inputs.publish_to_nuget }}
+        nuget_api_key: ${{ inputs.nuget_api_key }}
 
     - name: Pack project
       run: dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output ./out
 
     - name: Upload NuGet package to GitHub Artifacts
-      if: inputs.save-to-gh-artifact
+      if: fromJSON(inputs.save-to-gh-artifact)
       uses: actions/upload-artifact@v3
       with:
         name: ${{ inputs.package_name }}
@@ -74,23 +87,23 @@ runs:
         if-no-files-found: error
 
     - name: Create GitHub Release
-      if: inputs.create_github_release
+      if: fromJSON(inputs.create_github_release)
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
-        gh release create ${{ inputs.github_release_git_tag }} --repo ${{ github.repository }} --title "${{ inputs.package_name }} v${{ inputs.version }}" --notes "The package ``${{ inputs.package_name }}`` has been released in version ${{ inputs.version }}."
+        gh release create ${{ inputs.github_release_git_tag }} --repo ${{ inputs.repository }} --title "${{ inputs.package_name }} v${{ inputs.version }}" --notes "The package ``${{ inputs.package_name }}`` has been released in version ${{ inputs.version }}."
 
     - name: Upload NuGet package to GitHub Release
-      if: inputs.create_github_release
+      if: fromJSON(inputs.create_github_release)
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
       run: |
         gh release upload ${{ inputs.github_release_git_tag }} ./out/${{ inputs.package_name }}.${{ inputs.version }}.nupkg --repo ${{ inputs.repository }}
 
     - name: Publish to GitHub Packages
-      if: inputs.publish_to_github_packages
+      if: fromJSON(inputs.publish_to_github_packages)
       run: dotnet nuget push ./out/${{ inputs.package_name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.github_token }} --source https://nuget.pkg.github.com/${{ inputs.repository_owner }}/index.json
 
     - name: Publish to NuGet
-      if: inputs.publish_to_nuget_org
+      if: fromJSON(inputs.publish_to_nuget)
       run: dotnet nuget push ./out/${{ inputs.package_name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.nuget_api_key }} --source https://api.nuget.org/v3/index.json

@@ -1,0 +1,18 @@
+name: Validate semantic version
+description: Check if a given version number is valid semantic versioning
+
+inputs:
+  version:
+    description: "The version number to validate"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Validate semantic version
+      shell: pwsh
+      run: |
+        if (-not ("${{ inputs.version }}" -match '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$')) {
+          Write-Host "Invalid version format. Please use semantic versioning."
+          exit 1
+        }

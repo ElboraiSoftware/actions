@@ -1,0 +1,18 @@
+name: .Net Clone and setup
+description: ""
+
+inputs:
+  dotnet-version:
+    description: Version of .Net to use
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: "${{ inputs.dotnet-version }}"

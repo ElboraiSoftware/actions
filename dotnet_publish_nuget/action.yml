@@ -76,6 +76,7 @@ runs:
         nuget_api_key: ${{ inputs.nuget_api_key }}
 
     - name: Pack project
+      shell: pwsh
       run: dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output ./out
 
     - name: Upload NuGet package to GitHub Artifacts
@@ -90,6 +91,7 @@ runs:
       if: fromJSON(inputs.create_github_release)
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
+      shell: pwsh
       run: |
         gh release create ${{ inputs.github_release_git_tag }} --repo ${{ inputs.repository }} --title "${{ inputs.package_name }} v${{ inputs.version }}" --notes "The package ``${{ inputs.package_name }}`` has been released in version ${{ inputs.version }}."
 
@@ -97,13 +99,16 @@ runs:
       if: fromJSON(inputs.create_github_release)
       env:
         GITHUB_TOKEN: ${{ inputs.github_token }}
+      shell: pwsh
       run: |
         gh release upload ${{ inputs.github_release_git_tag }} ./out/${{ inputs.package_name }}.${{ inputs.version }}.nupkg --repo ${{ inputs.repository }}
 
     - name: Publish to GitHub Packages
       if: fromJSON(inputs.publish_to_github_packages)
+      shell: pwsh
       run: dotnet nuget push ./out/${{ inputs.package_name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.github_token }} --source https://nuget.pkg.github.com/${{ inputs.repository_owner }}/index.json
 
     - name: Publish to NuGet
       if: fromJSON(inputs.publish_to_nuget)
+      shell: pwsh
       run: dotnet nuget push ./out/${{ inputs.package_name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.nuget_api_key }} --source https://api.nuget.org/v3/index.json

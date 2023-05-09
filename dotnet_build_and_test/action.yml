@@ -1,0 +1,31 @@
+name: .Net Build and test
+description: Build and test all .Net projects in working directory
+
+inputs:
+  dotnet-version:
+    description: Version of .Net to use
+    required: true
+  configuration:
+    description: "The .Net configuration to use for builds and tests, Debug or Release"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: "${{ inputs.dotnet-version }}"
+
+    - name: Build
+      shell: pwsh
+      run: |
+        Get-ChildItem -Path . -Include *.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet build --configuration ${{ matrix.configuration }}  $_.FullName }
+
+    - name: Test
+      shell: pwsh
+      run: |
+        Get-ChildItem -Path . -Include *Tests.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet test --configuration ${{ matrix.configuration }} --verbosity normal $_.FullName }

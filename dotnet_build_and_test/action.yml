@@ -23,9 +23,9 @@ runs:
     - name: Build
       shell: pwsh
       run: |
-        Get-ChildItem -Path . -Include *.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet build --configuration ${{ matrix.configuration }}  $_.FullName }
+        Get-ChildItem -Path . -Include *.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet build --configuration ${{ inputs.configuration }}  $_.FullName }
 
     - name: Test
       shell: pwsh
       run: |
-        Get-ChildItem -Path . -Include *Tests.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet test --configuration ${{ matrix.configuration }} --verbosity normal $_.FullName }
+        Get-ChildItem -Path . -Include *Tests.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName }

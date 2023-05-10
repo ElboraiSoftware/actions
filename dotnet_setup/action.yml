@@ -46,7 +46,6 @@ runs:
 
         # First try to remove if the source is already added
         $feedUrl = "${{ inputs.github-packages-feed }}"
-        $feedUrl = "<YourFeedUrl>"
         $sources = dotnet nuget list source
         $sourceName = ""
         $sources -split "`n" | %{

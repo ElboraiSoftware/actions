@@ -50,9 +50,12 @@ runs:
         $sources = dotnet nuget list source
         $sourceName = ""
         $sources -split "`n" | %{
+            write-host $_
             if($_ -match '^\s+\d+\.\s+(.*)\s+\[Enabled\]$'){
                 $sourceName = $matches[1]
+                write-host "found match for source name: " $sourceName
             } elseif ($_ -match "^\s+$feedUrl$") {
+                write-host "found feed, will remove using source name: " $sourceName
                 dotnet nuget remove source $sourceName
             }
         }

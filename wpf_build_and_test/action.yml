@@ -1,0 +1,57 @@
+name: WPF build and test
+description: Build and test a WPF application
+
+inputs:
+  package-project-path:
+    description: Path to the .wapproj file
+    required: true
+  package-project-dir:
+    description: Directory containing the package project
+    required: true
+  test-project-path:
+    description: Path to test project
+    default: ""
+  configuration:
+    description: The .Net configuration to use for packing, Debug or Release
+    default: Release
+  target-platform:
+    description: The platform to target
+    default: x64
+  save-to-github-artifact:
+    description: If true the build will be saved to GitHub artifacts
+    default: "true"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Restore
+      shell: pwsh
+      run: msbuild /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
+
+    - name: Build for ${{ inputs.configuration }}
+      shell: pwsh
+      run: msbuild /p:Platform=${{ inputs.target-platform }} /p:Configuration=${{ inputs.configuration }} /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle
+      env:
+        AppxBundle: Always
+        BuildMode: SideloadOnly
+
+    - name: Test
+      shell: pwsh
+      if: test-project-path != ''
+      run: dotnet test ${{ inputs.test-project-path }}
+
+    - name: Create archive
+      if: fromJSON(save-to-github-artifact)
+      shell: pwsh
+      run: Compress-Archive -Path $env:PackagesDir\* -DestinationPath $env:PackagesDir\$env:ArchiveName
+      env:
+        PackagesDir: ${{ inputs.package-project-dir }}\AppPackages
+        ArchiveName: AppPackages.zip
+
+    - name: Upload build to GitHub Artifacts
+      if: fromJSON(inputs.save-to-github-artifact)
+      uses: actions/upload-artifact@v3
+      with:
+        name: MSIX Package
+        path: ${{ inputs.package-project-dir }}\AppPackages
+        if-no-files-found: error

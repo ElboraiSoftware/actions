@@ -1,4 +1,4 @@
-name: .Net Build and test
+name: .Net build and test
 description: Build and test all .Net projects in working directory
 
 inputs:

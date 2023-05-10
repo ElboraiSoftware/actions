@@ -33,6 +33,11 @@ runs:
       with:
         dotnet-version: "${{ inputs.dotnet-version }}"
 
+    - name: Setup MSBuild.exe
+      uses: microsoft/setup-msbuild@v1.1
+      with:
+        msbuild-architecture: x64
+
     - name: Configure private NuGet package source
       shell: pwsh
       if: inputs.github-packages-token != ""

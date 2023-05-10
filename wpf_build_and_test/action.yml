@@ -37,11 +37,11 @@ runs:
 
     - name: Test
       shell: pwsh
-      if: test-project-path != ''
+      if: inputs.test-project-path != ''
       run: dotnet test ${{ inputs.test-project-path }}
 
     - name: Create archive
-      if: fromJSON(save-to-github-artifact)
+      if: fromJSON(inputs.save-to-github-artifact)
       shell: pwsh
       run: Compress-Archive -Path $env:PackagesDir\* -DestinationPath $env:PackagesDir\$env:ArchiveName
       env:

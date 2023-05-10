@@ -42,7 +42,5 @@ runs:
       shell: pwsh
       if: inputs.github-packages-token != ''
       run: |
-        try {
-          dotnet nuget remove source "${{ inputs.github-packages-source-name }}"
-        } catch {}
+        dotnet nuget remove source "${{ inputs.github-packages-source-name }}" -ErrorAction Ignore
         dotnet nuget add source "${{ inputs.github-packages-feed }}" --name "${{ inputs.github-packages-source-name }}" --username "${{ inputs.github-packages-username }}" --password "${{ inputs.github-packages-token }}" --store-password-in-clear-text

@@ -1,10 +1,26 @@
-name: .Net Clone and setup
-description: ""
+name: Setup .Net
+description: Clone repository, setup .Net environment, setup private NuGet registry
 
 inputs:
   dotnet-version:
     description: Version of .Net to use
     required: true
+  github-packages-username:
+    description: Username to authenticate with GitHub Packages
+    default: dgellow
+    required: false
+  github-packages-token:
+    description: Token used to authenticate with GitHub Packages
+    default: ""
+    required: false
+  github-packages-feed:
+    description: GitHub Packages feed
+    default: https://nuget.pkg.github.com/ElboraiSoftware/index.json
+    required: false
+  github-packages-source-name:
+    description: GitHub Packages source name
+    default: "Private Elborai Software NuGet feed"
+    required: false
 
 runs:
   using: "composite"
@@ -16,3 +32,9 @@ runs:
       uses: actions/setup-dotnet@v3
       with:
         dotnet-version: "${{ inputs.dotnet-version }}"
+
+    - name: Configure private NuGet package source
+      shell: pwsh
+      if: inputs.github-packages-token != ""
+      run: |
+        dotnet nuget add source "${{ inputs.github-packages-feed }}" --name "{{ inputs.github-packages-source-name }}" --username "${{ inputs.github-packages-username }}" --password "${{ inputs.github-packages-token }}" --store-password-in-clear-text

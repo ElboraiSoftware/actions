@@ -42,6 +42,8 @@ runs:
       shell: pwsh
       if: inputs.github-packages-token != ''
       run: |
+        dotnet nuget list source -format detailed
+
         # First try to remove if the source is already added
         $feedUrl = "${{ inputs.github-packages-feed }}"
         $feedUrl = "<YourFeedUrl>"
@@ -54,5 +56,6 @@ runs:
                 dotnet nuget remove source $sourceName
             }
         }
+        dotnet nuget list source -format detailed
         # Then add the source
         dotnet nuget add source "${{ inputs.github-packages-feed }}" --name "${{ inputs.github-packages-source-name }}" --username "${{ inputs.github-packages-username }}" --password "${{ inputs.github-packages-token }}" --store-password-in-clear-text

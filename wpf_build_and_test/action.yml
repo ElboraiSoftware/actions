@@ -19,7 +19,7 @@ inputs:
     default: x64
   save-to-github-artifact:
     description: If true the build will be saved to GitHub artifacts
-    default: "true"
+    default: "false"
 
 runs:
   using: "composite"
@@ -40,18 +40,18 @@ runs:
       if: inputs.test-project-path != ''
       run: dotnet test ${{ inputs.test-project-path }}
 
-    - name: Create archive
-      if: fromJSON(inputs.save-to-github-artifact)
-      shell: pwsh
-      run: Compress-Archive -Path $env:PackagesDir\* -DestinationPath $env:PackagesDir\$env:ArchiveName
-      env:
-        PackagesDir: ${{ inputs.package-project-dir }}\AppPackages
-        ArchiveName: AppPackages.zip
+    # - name: Create archive
+    #   if: fromJSON(inputs.save-to-github-artifact)
+    #   shell: pwsh
+    #   run: Compress-Archive -Path $env:PackagesDir\* -DestinationPath $env:PackagesDir\$env:ArchiveName
+    #   env:
+    #     PackagesDir: ${{ inputs.package-project-dir }}\AppPackages
+    #     ArchiveName: AppPackages.zip
 
     - name: Upload build to GitHub Artifacts
       if: fromJSON(inputs.save-to-github-artifact)
       uses: actions/upload-artifact@v3
       with:
-        name: MSIX Package
-        path: ${{ inputs.package-project-dir }}\AppPackages
+        name: Build_${{ inputs.configuration }}_${{ inputs.target-platform }}
+        path: ${{ inputs.package-project-dir }}\AppPackages\*
         if-no-files-found: error

@@ -26,13 +26,13 @@ runs:
   steps:
     - name: Restore
       shell: pwsh
-      run: msbuild /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
+      run: msbuild ${{ package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
 
     - name: Build for ${{ inputs.configuration }}
       shell: pwsh
-      run: msbuild /p:Platform=${{ inputs.target-platform }} /p:Configuration=${{ inputs.configuration }} /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle
+      run: msbuild ${{ package-project-path }} /p:Platform=${{ inputs.target-platform }} /p:Configuration=${{ inputs.configuration }} /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle
       env:
-        AppxBundle: Always
+        AppxBundle: Never
         BuildMode: SideloadOnly
 
     - name: Test

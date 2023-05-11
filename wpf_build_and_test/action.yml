@@ -20,33 +20,51 @@ inputs:
   save-to-github-artifact:
     description: If true the build will be saved to GitHub artifacts
     default: "false"
+  pfx-certificate:
+    description: Base64 encoded PFX certificate used to sign the build
+    default: ""
+  pfx-password:
+    description: Password of the PFX certificate
+    default: ""
 
 runs:
   using: "composite"
   steps:
+    - name: Decode certificate
+      shell: pwsh
+      if: inputs.pfx-certificate != ''
+      run: |
+        $pfxCertificate = [System.Convert]::FromBase64String("${{ inputs.pfx-certificate }}")
+        Set-Content -Path .\mycert.pfx -Value $pfxCertificate -Encoding Byte
+
     - name: Restore
       shell: pwsh
       run: msbuild ${{ inputs.package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
 
     - name: Build for ${{ inputs.configuration }}
       shell: pwsh
-      run: msbuild ${{ inputs.package-project-path }} /p:Platform=${{ inputs.target-platform }} /p:Configuration=${{ inputs.configuration }} /p:UapAppxPackageBuildMode=$env:BuildMode /p:AppxBundle=$env:AppxBundle
-      env:
-        AppxBundle: Never
-        BuildMode: SideloadOnly
+      run: |
+        $buildArgs = @(
+          "/p:Platform=${{ inputs.target-platform }}"
+          "/p:Configuration=${{ inputs.configuration }}"
+          "/p:UapAppxPackageBuildMode=SideloadOnly"
+          "/p:AppxBundle=Never"
+        )
+        if ("${{ inputs.pfx-certificate }}" -ne '') {
+          $buildArgs += "/p:PackageCertificateKeyFile=.\mycert.pfx"
+          $buildArgs += "/p:PackageCertificatePassword=${{ inputs.pfx-password }}"
+        }
+        msbuild ${{ inputs.package-project-path }} $buildArgs
 
     - name: Test
       shell: pwsh
       if: inputs.test-project-path != ''
       run: dotnet test ${{ inputs.test-project-path }}
 
-    # - name: Create archive
-    #   if: fromJSON(inputs.save-to-github-artifact)
-    #   shell: pwsh
-    #   run: Compress-Archive -Path $env:PackagesDir\* -DestinationPath $env:PackagesDir\$env:ArchiveName
-    #   env:
-    #     PackagesDir: ${{ inputs.package-project-dir }}\AppPackages
-    #     ArchiveName: AppPackages.zip
+    - name: Remove certificate file
+      shell: pwsh
+      if: inputs.pfx-certificate != ''
+      run: Remove-Item -Path .\mycert.pfx
 
     - name: Upload build to GitHub Artifacts
       if: fromJSON(inputs.save-to-github-artifact)

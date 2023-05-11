@@ -52,6 +52,7 @@ runs:
           "/p:AppxBundle=Never"
         )
         if ("${{ inputs.pfx-certificate }}" -ne '') {
+          $buildArgs += "/p:AppxPackageSigningEnabled=True"
           $buildArgs += "/p:PackageCertificateKeyFile=.\mycert.pfx"
           $buildArgs += "/p:PackageCertificatePassword=${{ inputs.pfx-password }}"
         }

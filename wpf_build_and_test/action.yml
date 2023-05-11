@@ -37,14 +37,12 @@ runs:
         $pfxCertificate = "${{ inputs.pfx-certificate }}"
         $pfxCertificate | Out-File -FilePath mycert.b64
         certutil -decode mycert.b64 mycert.pfx
+
+    - name: Debugging step
+      shell: pwsh
+      run: |
         ls
-        if (Test-Path -Path .\mycert.pfx) {
-          Write-Host "Certificate file exists"
-        } else {
-          Write-Host "Certificate file does not exist"
-          exit 1
-        }
-        exit 1
+        certutil -dump .\mycert.pfx
 
     - name: Restore
       shell: pwsh
@@ -60,9 +58,10 @@ runs:
           "/p:AppxBundle=Never"
         )
         if ("${{ inputs.pfx-certificate }}" -ne '') {
-          $buildArgs += "/p:AppxPackageSigningEnabled=True"
-          $buildArgs += "/p:PackageCertificateKeyFile=.\mycert.pfx"
+          $absolutePath = Resolve-Path .\mycert.pfx
+          $buildArgs += "/p:PackageCertificateKeyFile=$absolutePath"
           $buildArgs += "/p:PackageCertificatePassword=${{ inputs.pfx-password }}"
+          $buildArgs += "/p:AppxPackageSigningEnabled=True"
         }
         msbuild ${{ inputs.package-project-path }} $buildArgs
 

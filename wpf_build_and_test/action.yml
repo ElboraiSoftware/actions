@@ -21,7 +21,7 @@ inputs:
     description: If true the build will be saved to GitHub artifacts
     default: "false"
   pfx-certificate:
-    description: Base64 encoded PFX certificate used to sign the build
+    description: Base64 encoded PFX certificate (expect certutil format)
     default: ""
   pfx-password:
     description: Password of the PFX certificate

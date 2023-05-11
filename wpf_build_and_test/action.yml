@@ -55,6 +55,7 @@ runs:
           $buildArgs += "/p:PackageCertificateKeyFile=.\mycert.pfx"
           $buildArgs += "/p:PackageCertificatePassword=${{ inputs.pfx-password }}"
         }
+        write-host Build arguments: $buildArgs
         msbuild ${{ inputs.package-project-path }} $buildArgs
 
     - name: Test

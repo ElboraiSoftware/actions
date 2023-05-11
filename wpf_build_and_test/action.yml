@@ -34,8 +34,9 @@ runs:
       shell: pwsh
       if: inputs.pfx-certificate != ''
       run: |
-        $pfxCertificate = [System.Convert]::FromBase64String("${{ inputs.pfx-certificate }}")
-        Set-Content -Path .\mycert.pfx -Value $pfxCertificate -Encoding Byte
+        $pfxCertificate = "${{ inputs.pfx-certificate }}"
+        $pfxCertificate | Out-File -FilePath mycert.b64
+        certutil -decode mycert.b64 mycert.pfx
 
     - name: Restore
       shell: pwsh
@@ -61,10 +62,12 @@ runs:
       if: inputs.test-project-path != ''
       run: dotnet test ${{ inputs.test-project-path }}
 
-    - name: Remove certificate file
+    - name: Remove certificate files
       shell: pwsh
       if: inputs.pfx-certificate != ''
-      run: Remove-Item -Path .\mycert.pfx
+      run: |
+        Remove-Item -Path .\mycert.b64
+        Remove-Item -Path .\mycert.pfx
 
     - name: Upload build to GitHub Artifacts
       if: fromJSON(inputs.save-to-github-artifact)

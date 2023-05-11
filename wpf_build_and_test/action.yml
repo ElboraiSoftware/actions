@@ -42,7 +42,7 @@ runs:
       shell: pwsh
       run: |
         ls
-        certutil -dump .\mycert.pfx
+        certutil -dump -p ${{ inputs.pfx-password }} .\mycert.pfx
 
     - name: Restore
       shell: pwsh

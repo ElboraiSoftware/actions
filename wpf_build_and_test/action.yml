@@ -38,12 +38,6 @@ runs:
         $pfxCertificate | Out-File -FilePath mycert.b64
         certutil -decode mycert.b64 mycert.pfx
 
-    - name: Debugging step
-      shell: pwsh
-      run: |
-        ls
-        certutil -dump -p ${{ inputs.pfx-password }} .\mycert.pfx
-
     - name: Restore
       shell: pwsh
       run: msbuild ${{ inputs.package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}

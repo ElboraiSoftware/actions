@@ -1,8 +1,0 @@
-name: Setup ANTLR 4
-description: Install ANTLR 4 via pip
-
-runs:
-  using: "composite"
-  steps:
-    - run: pip install antlr4-tools
-      shell: pwsh

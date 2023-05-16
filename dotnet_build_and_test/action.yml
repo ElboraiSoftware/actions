@@ -12,9 +12,17 @@ runs:
     - name: Build
       shell: pwsh
       run: |
-        Get-ChildItem -Path . -Include *.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet build --configuration ${{ inputs.configuration }}  $_.FullName }
+        $projects = Get-ChildItem -Recurse | Where-Object { $_.Name -like "*.csproj" -and $_.FullName -notlike "*/Examples/*" }
+        if ($projects.Count -eq 0) {
+          throw "No .csproj files found"
+        }
+        $projects | ForEach-Object { dotnet build --configuration ${{ inputs.configuration }}  $_.FullName }
 
     - name: Test
       shell: pwsh
       run: |
-        Get-ChildItem -Path . -Include *Tests.csproj -Recurse -Exclude 'Examples\*' | ForEach-Object { dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName }
+        $projects = Get-ChildItem -Recurse | Where-Object { $_.Name -like "*Tests.csproj" -and $_.FullName -notlike "*/Examples/*" }
+        if ($projects.Count -eq 0) {
+          throw "No .csproj files found"
+        }
+        $projects | ForEach-Object { dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName }

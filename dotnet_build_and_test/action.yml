@@ -12,6 +12,10 @@ runs:
     - name: Build
       shell: pwsh
       run: |
+        pwd
+
+        Get-ChildItem -Recurse -depth 2
+
         $projects = Get-ChildItem -Recurse | Where-Object { $_.Name -like "*.csproj" -and $_.FullName -notlike "*/Examples/*" }
         if ($projects.Count -eq 0) {
           throw "No .csproj files found"

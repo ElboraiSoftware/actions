@@ -1,0 +1,12 @@
+name: Setup ANTLR 4
+description: Install ANTLR 4 via pip
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.9"
+        cache: "pip" # caching pip dependencies
+    - run: pip install antlr4-tools
+      shell: pwsh

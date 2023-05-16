@@ -21,6 +21,9 @@ inputs:
     description: GitHub Packages source name
     default: "Private Elborai Software NuGet feed"
     required: false
+  os:
+    description: Current runner operating system
+    required: true
 
 runs:
   using: "composite"
@@ -31,6 +34,7 @@ runs:
         dotnet-version: "${{ inputs.dotnet-version }}"
 
     - name: Setup MSBuild.exe
+      if: inputs.os == 'Windows'
       uses: microsoft/setup-msbuild@v1.1
       with:
         msbuild-architecture: x64

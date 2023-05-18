@@ -1,0 +1,31 @@
+name: .Net benchmark
+description: Run BenchmarkDotNet project
+
+inputs:
+  project-name:
+    description: Name of the benchmark project
+    required: true
+  configuration:
+    description: The .Net configuration to use for benchmarking, Debug or Release
+    default: Release
+  save-to-github-artifact:
+    description: If true benchmark results will be saved to GitHub artifacts
+    default: "false"
+  artifact-suffix:
+    description: The suffix to use for the saved artifact, by default the configuration will be used
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Benchmark
+      shell: pwsh
+      run: dotnet run -c "${{ inputs.configuration }}" --project "${{ inputs.project-name }}" -- --allStats --stopOnFirstError --artifacts _benchmarking_artifacts
+
+    - name: Upload Benchmark Artifacts
+      if: fromJSON(inputs.save-to-github-artifacts)
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results-${{ inputs.artifact-suffix || inputs.configuration }}
+        path: _benchmarking_artifacts
+        if-no-files-found: error

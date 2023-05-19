@@ -82,7 +82,7 @@ runs:
     - name: Pack project
       shell: pwsh
       run: |
-        dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output ./out
+        dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-build --output ./out
 
     - name: Upload NuGet package to GitHub Artifacts
       if: fromJSON(inputs.save-to-gh-artifact)

@@ -45,10 +45,13 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
         dotnet nuget list source --format detailed
+        if(!$?) { Exit $LASTEXITCODE }
 
         # First try to remove if the source is already added
         $feedUrl = "${{ inputs.github-packages-feed }}"
         $sources = dotnet nuget list source
+        if(!$?) { Exit $LASTEXITCODE }
+
         $sourceName = ""
         $sources -split "`n" | %{
             write-host $_
@@ -58,8 +61,13 @@ runs:
             } elseif ($_ -match "^\s+$feedUrl$") {
                 write-host "found feed, will remove using source name: " $sourceName
                 dotnet nuget remove source $sourceName
+                if(!$?) { Exit $LASTEXITCODE }
             }
         }
+
         dotnet nuget list source --format detailed
+        if(!$?) { Exit $LASTEXITCODE }
+
         # Then add the source
         dotnet nuget add source "${{ inputs.github-packages-feed }}" --name "${{ inputs.github-packages-source-name }}" --username "${{ inputs.github-packages-username }}" --password "${{ inputs.github-packages-token }}" --store-password-in-clear-text
+        if(!$?) { Exit $LASTEXITCODE }

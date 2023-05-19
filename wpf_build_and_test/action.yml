@@ -42,7 +42,6 @@ runs:
     - name: Restore
       shell: pwsh
       run: |
-        $ErrorActionPreference = 'Stop'
         msbuild ${{ inputs.package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
 
     - name: Build for ${{ inputs.configuration }}
@@ -67,7 +66,6 @@ runs:
       shell: pwsh
       if: inputs.test-project-path != ''
       run: |
-        $ErrorActionPreference = 'Stop'
         dotnet test ${{ inputs.test-project-path }}
 
     - name: Remove certificate files

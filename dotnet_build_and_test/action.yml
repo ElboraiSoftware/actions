@@ -17,7 +17,10 @@ runs:
         if ($projects.Count -eq 0) {
           throw "No *.csproj files found. Did you forget to clone the repository?"
         }
-        $projects | ForEach-Object { dotnet build --configuration ${{ inputs.configuration }}  $_.FullName }
+        $projects | ForEach-Object {
+          dotnet build --configuration ${{ inputs.configuration }}  $_.FullName
+          if(!$?) { Exit $LASTEXITCODE }
+        }
 
     - name: Test
       shell: pwsh
@@ -27,4 +30,7 @@ runs:
         if ($projects.Count -eq 0) {
           throw "No *Tests.csproj files found. Did you forget to clone the repository?"
         }
-        $projects | ForEach-Object { dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName }
+        $projects | ForEach-Object {
+          dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName
+          if(!$?) { Exit $LASTEXITCODE }
+        }

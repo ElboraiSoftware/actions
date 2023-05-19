@@ -21,7 +21,6 @@ runs:
     - name: Benchmark
       shell: pwsh
       run: |
-        $ErrorActionPreference = 'Stop'
         dotnet run -c "${{ inputs.configuration }}" --project "${{ inputs.project-name }}" -- --allStats --stopOnFirstError --artifacts _benchmarking_artifacts
 
     - name: Upload Benchmark Artifacts

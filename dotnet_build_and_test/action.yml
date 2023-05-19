@@ -5,6 +5,12 @@ inputs:
   configuration:
     description: "The .Net configuration to use for builds and tests, Debug or Release"
     required: true
+  use-msbuild:
+    description: "Use MSBuild instead of dotnet CLI"
+    default: "false"
+  platform:
+    description: "The platform to use, x86, x64"
+    default: "x64"
 
 runs:
   using: "composite"
@@ -18,7 +24,11 @@ runs:
           throw "No *.csproj files found. Did you forget to clone the repository?"
         }
         $projects | ForEach-Object {
-          dotnet build --configuration ${{ inputs.configuration }}  $_.FullName
+          if ("${{ inputs.use-msbuild }}" -eq "true") {
+            msbuild /p:Configuration=${{ inputs.configuration }} /p:Platform="${{ inputs.platform }} /m $_.FullName
+          } else {
+            dotnet build --configuration ${{ inputs.configuration }}  $_.FullName
+          }
           if(!$?) { Exit $LASTEXITCODE }
         }
 
@@ -31,6 +41,10 @@ runs:
           throw "No *Tests.csproj files found. Did you forget to clone the repository?"
         }
         $projects | ForEach-Object {
-          dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName
+          if ("${{ inputs.use-msbuild }}" -eq "true") {
+            msbuild /t:VSTest /p:Configuration=${{ inputs.configuration }} /p:Platform="${{ inputs.platform }}" $_.FullName
+          } else {
+            dotnet test --configuration ${{ inputs.configuration }} --verbosity normal $_.FullName
+          }
           if(!$?) { Exit $LASTEXITCODE }
         }

@@ -41,6 +41,9 @@ inputs:
   nuget-api-key:
     description: The NuGet API key
     default: ""
+  use-msbuild:
+    description: "Use MSBuild instead of dotnet CLI"
+    default: "false"
 
 runs:
   using: "composite"
@@ -82,7 +85,14 @@ runs:
     - name: Pack project
       shell: pwsh
       run: |
-        dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output ./out
+        $currentDir = Get-Location
+        $outDir = Join-Path -Path $currentDir -ChildPath "out"
+        if ("${{ inputs.use-msbuild }}" -eq "true") {
+          msbuild /t:Pack /p:Configuration="${{ inputs.configuration }}" /p:Platform="${{ inputs.platform }}" /p:PackageOutputPath="${outDir}" .\${{ inputs.csproj-path }}
+        } else {
+          dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output $outDir
+        }
+        if(!$?) { Exit $LASTEXITCODE }
 
     - name: Upload NuGet package to GitHub Artifacts
       if: fromJSON(inputs.save-to-gh-artifact)

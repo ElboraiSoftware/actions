@@ -8,9 +8,6 @@ inputs:
   use-msbuild:
     description: "Use MSBuild instead of dotnet CLI"
     default: "false"
-  platform:
-    description: "The platform to use, x86, x64"
-    default: "x64"
 
 runs:
   using: "composite"
@@ -27,7 +24,7 @@ runs:
           if ("${{ inputs.use-msbuild }}" -eq "true") {
             msbuild /t:Restore $_.FullName
             if(!$?) { Exit $LASTEXITCODE }
-            msbuild /p:Configuration="${{ inputs.configuration }}" /p:Platform="${{ inputs.platform }}" /m $_.FullName
+            msbuild /p:Configuration="${{ inputs.configuration }}" /m $_.FullName
             if(!$?) { Exit $LASTEXITCODE }
           } else {
             dotnet build --configuration "${{ inputs.configuration }}"  $_.FullName

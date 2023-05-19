@@ -44,12 +44,6 @@ runs:
           throw "No *Tests.csproj files found. Did you forget to clone the repository?"
         }
         $projects | ForEach-Object {
-          if ("${{ inputs.use-msbuild }}" -eq "true") {
-            msbuild /t:Restore $_.FullName
-            msbuild /t:VSTest /p:Configuration="${{ inputs.configuration }}" /p:Platform="${{ inputs.platform }}" $_.FullName
-            if(!$?) { Exit $LASTEXITCODE }
-          } else {
-            dotnet test --configuration "${{ inputs.configuration }}" --verbosity normal $_.FullName
-            if(!$?) { Exit $LASTEXITCODE }
-          }
+          dotnet test --configuration "${{ inputs.configuration }}" --verbosity normal $_.FullName
+          if(!$?) { Exit $LASTEXITCODE }
         }

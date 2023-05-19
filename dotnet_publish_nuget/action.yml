@@ -48,6 +48,7 @@ runs:
     - name: Check github-release-git-tag requirement
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         if (($env:create-github-release -eq 'true') -and -not $env:github-release-git-tag) {
           Write-Host "github-release-git-tag should be set if create-github-release is true"
           exit 1
@@ -59,6 +60,7 @@ runs:
     - name: Check github-token requirement
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         if (($env:publish-to-github-packages -eq 'true' -or $env:create-github-release -eq 'true') -and -not $env:github-token) {
           Write-Host "github-token should be set if publish-to-github-packages or create-github-release is true"
           exit 1
@@ -71,6 +73,7 @@ runs:
     - name: Check nuget-api-key requirement
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         if (($env:publish-to-nuget -eq 'true') -and -not $env:nuget-api-key) {
           Write-Host "nuget-api-key should be set if publish-to-nuget is true"
           exit 1
@@ -81,7 +84,9 @@ runs:
 
     - name: Pack project
       shell: pwsh
-      run: dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output ./out
+      run: |
+        $ErrorActionPreference = 'Stop'
+        dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output ./out
 
     - name: Upload NuGet package to GitHub Artifacts
       if: fromJSON(inputs.save-to-gh-artifact)
@@ -97,6 +102,7 @@ runs:
         GITHUB-TOKEN: ${{ inputs.github-token }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         gh release create ${{ inputs.github-release-git-tag }} --repo ${{ inputs.repository }} --title "${{ inputs.package-name }} v${{ inputs.version }}" --notes "The package ``${{ inputs.package-name }}`` has been released in version ${{ inputs.version }}."
 
     - name: Upload NuGet package to GitHub Release
@@ -105,14 +111,19 @@ runs:
         GITHUB-TOKEN: ${{ inputs.github-token }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         gh release upload ${{ inputs.github-release-git-tag }} ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --repo ${{ inputs.repository }}
 
     - name: Publish to GitHub Packages
       if: fromJSON(inputs.publish-to-github-packages)
       shell: pwsh
-      run: dotnet nuget push ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.github-token }} --source https://nuget.pkg.github.com/${{ inputs.repository-owner }}/index.json
+      run: |
+        $ErrorActionPreference = 'Stop'
+        dotnet nuget push ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.github-token }} --source https://nuget.pkg.github.com/${{ inputs.repository-owner }}/index.json
 
     - name: Publish to NuGet
       if: fromJSON(inputs.publish-to-nuget)
       shell: pwsh
-      run: dotnet nuget push ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.nuget-api-key }} --source https://api.nuget.org/v3/index.json
+      run: |
+        $ErrorActionPreference = 'Stop'
+        dotnet nuget push ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.nuget-api-key }} --source https://api.nuget.org/v3/index.json

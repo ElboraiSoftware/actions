@@ -43,6 +43,7 @@ runs:
       shell: pwsh
       if: inputs.github-packages-token != ''
       run: |
+        $ErrorActionPreference = 'Stop'
         dotnet nuget list source --format detailed
 
         # First try to remove if the source is already added

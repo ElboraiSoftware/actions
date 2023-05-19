@@ -12,6 +12,7 @@ runs:
     - name: Validate semantic version
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         if (-not ("${{ inputs.version }}" -match '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$')) {
           Write-Host "Invalid version format. Please use semantic versioning."
           exit 1

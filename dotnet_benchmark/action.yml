@@ -20,7 +20,9 @@ runs:
   steps:
     - name: Benchmark
       shell: pwsh
-      run: dotnet run -c "${{ inputs.configuration }}" --project "${{ inputs.project-name }}" -- --allStats --stopOnFirstError --artifacts _benchmarking_artifacts
+      run: |
+        $ErrorActionPreference = 'Stop'
+        dotnet run -c "${{ inputs.configuration }}" --project "${{ inputs.project-name }}" -- --allStats --stopOnFirstError --artifacts _benchmarking_artifacts
 
     - name: Upload Benchmark Artifacts
       if: fromJSON(inputs.save-to-github-artifacts)

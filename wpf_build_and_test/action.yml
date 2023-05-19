@@ -34,17 +34,21 @@ runs:
       shell: pwsh
       if: inputs.pfx-certificate != ''
       run: |
+        $ErrorActionPreference = 'Stop'
         $pfxCertificate = "${{ inputs.pfx-certificate }}"
         $pfxCertificate | Out-File -FilePath mycert.b64
         certutil -decode mycert.b64 mycert.pfx
 
     - name: Restore
       shell: pwsh
-      run: msbuild ${{ inputs.package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        msbuild ${{ inputs.package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
 
     - name: Build for ${{ inputs.configuration }}
       shell: pwsh
       run: |
+        $ErrorActionPreference = 'Stop'
         $buildArgs = @(
           "/p:Platform=${{ inputs.target-platform }}"
           "/p:Configuration=${{ inputs.configuration }}"
@@ -62,12 +66,15 @@ runs:
     - name: Test
       shell: pwsh
       if: inputs.test-project-path != ''
-      run: dotnet test ${{ inputs.test-project-path }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        dotnet test ${{ inputs.test-project-path }}
 
     - name: Remove certificate files
       shell: pwsh
       if: inputs.pfx-certificate != ''
       run: |
+        $ErrorActionPreference = 'Stop'
         Remove-Item -Path .\mycert.b64
         Remove-Item -Path .\mycert.pfx
 

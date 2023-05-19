@@ -25,11 +25,14 @@ runs:
         }
         $projects | ForEach-Object {
           if ("${{ inputs.use-msbuild }}" -eq "true") {
+            msbuild /t:Restore $_.FullName
+            if(!$?) { Exit $LASTEXITCODE }
             msbuild /p:Configuration="${{ inputs.configuration }}" /p:Platform="${{ inputs.platform }}" /m $_.FullName
+            if(!$?) { Exit $LASTEXITCODE }
           } else {
             dotnet build --configuration "${{ inputs.configuration }}"  $_.FullName
+            if(!$?) { Exit $LASTEXITCODE }
           }
-          if(!$?) { Exit $LASTEXITCODE }
         }
 
     - name: Test
@@ -42,9 +45,11 @@ runs:
         }
         $projects | ForEach-Object {
           if ("${{ inputs.use-msbuild }}" -eq "true") {
+            msbuild /t:Restore $_.FullName
             msbuild /t:VSTest /p:Configuration="${{ inputs.configuration }}" /p:Platform="${{ inputs.platform }}" $_.FullName
+            if(!$?) { Exit $LASTEXITCODE }
           } else {
             dotnet test --configuration "${{ inputs.configuration }}" --verbosity normal $_.FullName
+            if(!$?) { Exit $LASTEXITCODE }
           }
-          if(!$?) { Exit $LASTEXITCODE }
         }

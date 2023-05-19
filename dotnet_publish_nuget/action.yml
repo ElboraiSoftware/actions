@@ -88,7 +88,7 @@ runs:
         $currentDir = Get-Location
         $outDir = Join-Path -Path $currentDir -ChildPath "out"
         if ("${{ inputs.use-msbuild }}" -eq "true") {
-          msbuild /t:Pack /p:Configuration="${{ inputs.configuration }}" /p:Platform="${{ inputs.platform }}" /p:PackageOutputPath="${outDir}" .\${{ inputs.csproj-path }}
+          msbuild /t:Pack /p:Configuration="${{ inputs.configuration }}" /p:Version=${{ inputs.version }} /p:PackageOutputPath="${outDir}" .\${{ inputs.csproj-path }}
         } else {
           dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output $outDir
         }

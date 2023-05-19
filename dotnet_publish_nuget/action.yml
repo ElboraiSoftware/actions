@@ -48,36 +48,36 @@ runs:
     - name: Check github-release-git-tag requirement
       shell: pwsh
       run: |
-        if (($env:create-github-release -eq 'true') -and -not $env:github-release-git-tag) {
+        if ((${env:create_github_release} -eq 'true') -and -not ${env:github_release_git_tag}) {
           Write-Host "github-release-git-tag should be set if create-github-release is true"
           exit 1
         }
       env:
-        create-github-release: ${{ inputs.create-github-release }}
-        github-release-git-tag: ${{ inputs.github-release-git-tag }}
+        create_github_release: ${{ inputs.create-github-release }}
+        github_release_git_tag: ${{ inputs.github-release-git-tag }}
 
     - name: Check github-token requirement
       shell: pwsh
       run: |
-        if (($env:publish-to-github-packages -eq 'true' -or $env:create-github-release -eq 'true') -and -not $env:github-token) {
+        if ((${env:publish_to_github_packages} -eq 'true' -or ${env:create_github_release} -eq 'true') -and -not ${env:github_token}) {
           Write-Host "github-token should be set if publish-to-github-packages or create-github-release is true"
           exit 1
         }
       env:
-        publish-to-github-packages: ${{ inputs.publish-to-github-packages }}
-        create-github-release: ${{ inputs.create-github-release }}
-        github-token: ${{ inputs.github-token }}
+        publish_to_github_packages: ${{ inputs.publish-to-github-packages }}
+        create_github_release: ${{ inputs.create-github-release }}
+        github_token: ${{ inputs.github-token }}
 
     - name: Check nuget-api-key requirement
       shell: pwsh
       run: |
-        if (($env:publish-to-nuget -eq 'true') -and -not $env:nuget-api-key) {
+        if ((${env:publish_to_nuget} -eq 'true') -and -not ${env:nuget_api_key}) {
           Write-Host "nuget-api-key should be set if publish-to-nuget is true"
           exit 1
         }
       env:
-        publish-to-nuget: ${{ inputs.publish-to-nuget }}
-        nuget-api-key: ${{ inputs.nuget-api-key }}
+        publish_to_nuget: ${{ inputs.publish-to-nuget }}
+        nuget_api_key: ${{ inputs.nuget-api-key }}
 
     - name: Pack project
       shell: pwsh

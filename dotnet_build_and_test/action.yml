@@ -16,7 +16,9 @@ runs:
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $projects = Get-ChildItem -Recurse | Where-Object { $_.Name -like "*.csproj" -and $_.FullName -notlike "*/Examples/*" }
+        $projects = Get-ChildItem -Recurse | Where-Object {
+          $_.Name -like "*.csproj" -and ($_.FullName -replace '\\', '/') -notlike "*/Examples/*"
+        }
         if ($projects.Count -eq 0) {
           throw "No *.csproj files found. Did you forget to clone the repository?"
         }
@@ -36,7 +38,9 @@ runs:
       shell: pwsh
       run: |
         $ErrorActionPreference = 'Stop'
-        $projects = Get-ChildItem -Recurse | Where-Object { $_.Name -like "*Tests.csproj" -and $_.FullName -notlike "*/Examples/*" }
+        $projects = Get-ChildItem -Recurse | Where-Object {
+          $_.Name -like "*Tests.csproj" -and ($_.FullName -replace '\\', '/') -notlike "*/Examples/*"
+        }
         if ($projects.Count -eq 0) {
           throw "No *Tests.csproj files found. Did you forget to clone the repository?"
         }

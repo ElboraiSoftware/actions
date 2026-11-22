@@ -23,16 +23,19 @@ runs:
           throw "No *.csproj files found. Did you forget to clone the repository?"
         }
         $projects | ForEach-Object {
-          if ("${{ inputs.use-msbuild }}" -eq "true") {
+          if ($env:ACTION_USE_MSBUILD -eq "true") {
             msbuild /t:Restore $_.FullName
             if(!$?) { Exit $LASTEXITCODE }
-            msbuild /p:Configuration="${{ inputs.configuration }}" /m $_.FullName
+            msbuild /p:Configuration="$env:ACTION_CONFIGURATION" /m $_.FullName
             if(!$?) { Exit $LASTEXITCODE }
           } else {
-            dotnet build --configuration "${{ inputs.configuration }}"  $_.FullName
+            dotnet build --configuration "$env:ACTION_CONFIGURATION"  $_.FullName
             if(!$?) { Exit $LASTEXITCODE }
           }
         }
+      env:
+        ACTION_USE_MSBUILD: ${{ inputs.use-msbuild }}
+        ACTION_CONFIGURATION: ${{ inputs.configuration }}
 
     - name: Test
       shell: pwsh
@@ -45,6 +48,8 @@ runs:
           throw "No *Tests.csproj files found. Did you forget to clone the repository?"
         }
         $projects | ForEach-Object {
-          dotnet test --configuration "${{ inputs.configuration }}" --verbosity normal $_.FullName
+          dotnet test --configuration "$env:ACTION_CONFIGURATION" --verbosity normal $_.FullName
           if(!$?) { Exit $LASTEXITCODE }
         }
+      env:
+        ACTION_CONFIGURATION: ${{ inputs.configuration }}

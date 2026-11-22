@@ -1,5 +1,5 @@
 name: Setup .Net
-description: Clone repository, setup .Net environment, setup private NuGet registry
+description: Set up .NET and MSBuild (on Windows), and optionally a private NuGet source on GitHub Packages
 
 inputs:
   dotnet-version:
@@ -29,13 +29,13 @@ runs:
   using: "composite"
   steps:
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: "${{ inputs.dotnet-version }}"
 
     - name: Setup MSBuild.exe
       if: inputs.os == 'Windows'
-      uses: microsoft/setup-msbuild@v1.1
+      uses: microsoft/setup-msbuild@v2
       with:
         msbuild-architecture: x64
 
@@ -48,7 +48,7 @@ runs:
         if(!$?) { Exit $LASTEXITCODE }
 
         # First try to remove if the source is already added
-        $feedUrl = "${{ inputs.github-packages-feed }}"
+        $feedUrl = $env:ACTION_FEED
         $sources = dotnet nuget list source
         if(!$?) { Exit $LASTEXITCODE }
 
@@ -58,7 +58,7 @@ runs:
             if($_ -match '^\s+\d+\.\s+(.*)\s+\[Enabled\]$'){
                 $sourceName = $matches[1]
                 write-host "found match for source name: " $sourceName
-            } elseif ($_ -match "^\s+$feedUrl$") {
+            } elseif ($_ -match ("^\s+" + [regex]::Escape($feedUrl) + "$")) {
                 write-host "found feed, will remove using source name: " $sourceName
                 dotnet nuget remove source $sourceName
                 if(!$?) { Exit $LASTEXITCODE }
@@ -69,5 +69,10 @@ runs:
         if(!$?) { Exit $LASTEXITCODE }
 
         # Then add the source
-        dotnet nuget add source "${{ inputs.github-packages-feed }}" --name "${{ inputs.github-packages-source-name }}" --username "${{ inputs.github-packages-username }}" --password "${{ inputs.github-packages-token }}" --store-password-in-clear-text
+        dotnet nuget add source "$env:ACTION_FEED" --name "$env:ACTION_SOURCE_NAME" --username "$env:ACTION_USERNAME" --password "$env:ACTION_TOKEN" --store-password-in-clear-text
         if(!$?) { Exit $LASTEXITCODE }
+      env:
+        ACTION_FEED: ${{ inputs.github-packages-feed }}
+        ACTION_SOURCE_NAME: ${{ inputs.github-packages-source-name }}
+        ACTION_USERNAME: ${{ inputs.github-packages-username }}
+        ACTION_TOKEN: ${{ inputs.github-packages-token }}

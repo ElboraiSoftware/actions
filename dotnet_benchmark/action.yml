@@ -21,11 +21,14 @@ runs:
     - name: Benchmark
       shell: pwsh
       run: |
-        dotnet run -c "${{ inputs.configuration }}" --project "${{ inputs.project-name }}" -- --allStats --stopOnFirstError --artifacts _benchmarking_artifacts
+        dotnet run -c "$env:ACTION_CONFIGURATION" --project "$env:ACTION_PROJECT_NAME" -- --allStats --stopOnFirstError --artifacts _benchmarking_artifacts
+      env:
+        ACTION_CONFIGURATION: ${{ inputs.configuration }}
+        ACTION_PROJECT_NAME: ${{ inputs.project-name }}
 
     - name: Upload Benchmark Artifacts
-      if: fromJSON(inputs.save-to-github-artifacts)
-      uses: actions/upload-artifact@v3
+      if: fromJSON(inputs.save-to-github-artifact)
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-results-${{ inputs.artifact-suffix || inputs.configuration }}
         path: _benchmarking_artifacts

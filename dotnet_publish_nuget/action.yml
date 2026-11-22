@@ -87,16 +87,21 @@ runs:
       run: |
         $currentDir = Get-Location
         $outDir = Join-Path -Path $currentDir -ChildPath "out"
-        if ("${{ inputs.use-msbuild }}" -eq "true") {
-          msbuild /t:Pack /p:Configuration="${{ inputs.configuration }}" /p:Version=${{ inputs.version }} /p:PackageOutputPath="${outDir}" .\${{ inputs.csproj-path }}
+        if ($env:ACTION_USE_MSBUILD -eq "true") {
+          msbuild /t:Pack /p:Configuration="$env:ACTION_CONFIGURATION" /p:Version="$env:ACTION_VERSION" /p:PackageOutputPath="${outDir}" "$env:ACTION_CSPROJ_PATH"
         } else {
-          dotnet pack ./${{ inputs.csproj-path }} --configuration ${{ inputs.configuration }} /p:Version=${{ inputs.version }} --no-restore --no-build --output $outDir
+          dotnet pack "$env:ACTION_CSPROJ_PATH" --configuration "$env:ACTION_CONFIGURATION" /p:Version="$env:ACTION_VERSION" --no-restore --no-build --output $outDir
         }
         if(!$?) { Exit $LASTEXITCODE }
+      env:
+        ACTION_USE_MSBUILD: ${{ inputs.use-msbuild }}
+        ACTION_CONFIGURATION: ${{ inputs.configuration }}
+        ACTION_VERSION: ${{ inputs.version }}
+        ACTION_CSPROJ_PATH: ${{ inputs.csproj-path }}
 
     - name: Upload NuGet package to GitHub Artifacts
       if: fromJSON(inputs.save-to-gh-artifact)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.package-name }}
         path: ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg
@@ -105,27 +110,44 @@ runs:
     - name: Create GitHub Release
       if: fromJSON(inputs.create-github-release)
       env:
-        GITHUB-TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        ACTION_TAG: ${{ inputs.github-release-git-tag }}
+        ACTION_REPOSITORY: ${{ inputs.repository }}
+        ACTION_PACKAGE_NAME: ${{ inputs.package-name }}
+        ACTION_VERSION: ${{ inputs.version }}
       shell: pwsh
       run: |
-        gh release create ${{ inputs.github-release-git-tag }} --repo ${{ inputs.repository }} --title "${{ inputs.package-name }} v${{ inputs.version }}" --notes "The package ``${{ inputs.package-name }}`` has been released in version ${{ inputs.version }}."
+        gh release create "$env:ACTION_TAG" --repo "$env:ACTION_REPOSITORY" --title "$env:ACTION_PACKAGE_NAME v$env:ACTION_VERSION" --notes "The package ``$env:ACTION_PACKAGE_NAME`` has been released in version $env:ACTION_VERSION."
 
     - name: Upload NuGet package to GitHub Release
       if: fromJSON(inputs.create-github-release)
       env:
-        GITHUB-TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ inputs.github-token }}
+        ACTION_TAG: ${{ inputs.github-release-git-tag }}
+        ACTION_REPOSITORY: ${{ inputs.repository }}
+        ACTION_PACKAGE_NAME: ${{ inputs.package-name }}
+        ACTION_VERSION: ${{ inputs.version }}
       shell: pwsh
       run: |
-        gh release upload ${{ inputs.github-release-git-tag }} ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --repo ${{ inputs.repository }}
+        gh release upload "$env:ACTION_TAG" "./out/$env:ACTION_PACKAGE_NAME.$env:ACTION_VERSION.nupkg" --repo "$env:ACTION_REPOSITORY"
 
     - name: Publish to GitHub Packages
       if: fromJSON(inputs.publish-to-github-packages)
       shell: pwsh
       run: |
-        dotnet nuget push ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.github-token }} --source https://nuget.pkg.github.com/${{ inputs.repository-owner }}/index.json
+        dotnet nuget push "./out/$env:ACTION_PACKAGE_NAME.$env:ACTION_VERSION.nupkg" --api-key "$env:ACTION_API_KEY" --source "https://nuget.pkg.github.com/$env:ACTION_OWNER/index.json"
+      env:
+        ACTION_API_KEY: ${{ inputs.github-token }}
+        ACTION_OWNER: ${{ inputs.repository-owner }}
+        ACTION_PACKAGE_NAME: ${{ inputs.package-name }}
+        ACTION_VERSION: ${{ inputs.version }}
 
     - name: Publish to NuGet
       if: fromJSON(inputs.publish-to-nuget)
       shell: pwsh
       run: |
-        dotnet nuget push ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg --api-key ${{ inputs.nuget-api-key }} --source https://api.nuget.org/v3/index.json
+        dotnet nuget push "./out/$env:ACTION_PACKAGE_NAME.$env:ACTION_VERSION.nupkg" --api-key "$env:ACTION_API_KEY" --source https://api.nuget.org/v3/index.json
+      env:
+        ACTION_API_KEY: ${{ inputs.nuget-api-key }}
+        ACTION_PACKAGE_NAME: ${{ inputs.package-name }}
+        ACTION_VERSION: ${{ inputs.version }}

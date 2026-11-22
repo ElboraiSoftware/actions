@@ -33,40 +33,53 @@ runs:
     - name: Decode certificate
       shell: pwsh
       if: inputs.pfx-certificate != ''
+      env:
+        ACTION_PFX_CERTIFICATE: ${{ inputs.pfx-certificate }}
       run: |
         $ErrorActionPreference = 'Stop'
-        $pfxCertificate = "${{ inputs.pfx-certificate }}"
-        $pfxCertificate | Out-File -FilePath mycert.b64
+        $env:ACTION_PFX_CERTIFICATE | Out-File -FilePath mycert.b64
         certutil -decode mycert.b64 mycert.pfx
 
     - name: Restore
       shell: pwsh
+      env:
+        ACTION_PROJECT: ${{ inputs.package-project-path }}
+        ACTION_CONFIGURATION: ${{ inputs.configuration }}
+        ACTION_PLATFORM: ${{ inputs.target-platform }}
       run: |
-        msbuild ${{ inputs.package-project-path }} /t:Restore /p:Configuration=${{ inputs.configuration }} /p:RuntimeIdentifier=win-${{ inputs.target-platform }}
+        msbuild "$env:ACTION_PROJECT" /t:Restore /p:Configuration="$env:ACTION_CONFIGURATION" /p:RuntimeIdentifier="win-$env:ACTION_PLATFORM"
 
     - name: Build for ${{ inputs.configuration }}
       shell: pwsh
+      env:
+        ACTION_PROJECT: ${{ inputs.package-project-path }}
+        ACTION_CONFIGURATION: ${{ inputs.configuration }}
+        ACTION_PLATFORM: ${{ inputs.target-platform }}
+        ACTION_HAS_CERTIFICATE: ${{ inputs.pfx-certificate != '' }}
+        ACTION_PFX_PASSWORD: ${{ inputs.pfx-password }}
       run: |
         $ErrorActionPreference = 'Stop'
         $buildArgs = @(
-          "/p:Platform=${{ inputs.target-platform }}"
-          "/p:Configuration=${{ inputs.configuration }}"
+          "/p:Platform=$env:ACTION_PLATFORM"
+          "/p:Configuration=$env:ACTION_CONFIGURATION"
           "/p:UapAppxPackageBuildMode=SideloadOnly"
           "/p:AppxBundle=Never"
         )
-        if ("${{ inputs.pfx-certificate }}" -ne '') {
+        if ($env:ACTION_HAS_CERTIFICATE -eq 'true') {
           $absolutePath = Resolve-Path .\mycert.pfx
           $buildArgs += "/p:PackageCertificateKeyFile=$absolutePath"
-          $buildArgs += "/p:PackageCertificatePassword=${{ inputs.pfx-password }}"
+          $buildArgs += "/p:PackageCertificatePassword=$env:ACTION_PFX_PASSWORD"
           $buildArgs += "/p:AppxPackageSigningEnabled=True"
         }
-        msbuild ${{ inputs.package-project-path }} $buildArgs
+        msbuild "$env:ACTION_PROJECT" $buildArgs
 
     - name: Test
       shell: pwsh
       if: inputs.test-project-path != ''
+      env:
+        ACTION_TEST_PROJECT: ${{ inputs.test-project-path }}
       run: |
-        dotnet test ${{ inputs.test-project-path }}
+        dotnet test "$env:ACTION_TEST_PROJECT"
 
     - name: Remove certificate files
       shell: pwsh

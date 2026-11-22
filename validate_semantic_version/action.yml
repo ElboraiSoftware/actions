@@ -11,8 +11,10 @@ runs:
   steps:
     - name: Validate semantic version
       shell: pwsh
+      env:
+        ACTION_VERSION: ${{ inputs.version }}
       run: |
-        if (-not ("${{ inputs.version }}" -match '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$')) {
+        if (-not ($env:ACTION_VERSION -match '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$')) {
           Write-Host "Invalid version format. Please use semantic versioning."
           exit 1
         }

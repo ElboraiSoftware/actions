@@ -96,7 +96,7 @@ runs:
 
     - name: Upload NuGet package to GitHub Artifacts
       if: fromJSON(inputs.save-to-gh-artifact)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ inputs.package-name }}
         path: ./out/${{ inputs.package-name }}.${{ inputs.version }}.nupkg

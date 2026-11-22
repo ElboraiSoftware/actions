@@ -25,7 +25,7 @@ runs:
 
     - name: Upload Benchmark Artifacts
       if: fromJSON(inputs.save-to-github-artifacts)
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-results-${{ inputs.artifact-suffix || inputs.configuration }}
         path: _benchmarking_artifacts

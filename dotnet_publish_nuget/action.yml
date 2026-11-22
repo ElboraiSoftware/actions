@@ -1,5 +1,5 @@
 name: .Net Publish NuGet package
-description: Pack, create a GitHub release, publish to GitHub Packages, publish to NuGet
+description: Pack, create a GitHub release, publish to GitHub Packages, publish to nuget.org with trusted publishing
 
 inputs:
   version:
@@ -36,10 +36,13 @@ inputs:
     description: The GitHub token used to authenticate with GitHub Packages registry
     default: ""
   publish-to-nuget:
-    description: If true the NuGet package will be pushed to NuGet registry
+    description: >-
+      If true the NuGet package will be pushed to nuget.org with trusted publishing.
+      The calling job needs the id-token write permission, and nuget.org needs a
+      trusted publishing policy naming the calling workflow file.
     default: "false"
-  nuget-api-key:
-    description: The NuGet API key
+  nuget-user:
+    description: The nuget.org profile name (not the email address) that owns the trusted publishing policy
     default: ""
   use-msbuild:
     description: "Use MSBuild instead of dotnet CLI"
@@ -71,16 +74,16 @@ runs:
         create_github_release: ${{ inputs.create-github-release }}
         github_token: ${{ inputs.github-token }}
 
-    - name: Check nuget-api-key requirement
+    - name: Check nuget-user requirement
       shell: pwsh
       run: |
-        if ((${env:publish_to_nuget} -eq 'true') -and -not ${env:nuget_api_key}) {
-          Write-Host "nuget-api-key should be set if publish-to-nuget is true"
+        if ((${env:publish_to_nuget} -eq 'true') -and -not ${env:nuget_user}) {
+          Write-Host "nuget-user should be set if publish-to-nuget is true"
           exit 1
         }
       env:
         publish_to_nuget: ${{ inputs.publish-to-nuget }}
-        nuget_api_key: ${{ inputs.nuget-api-key }}
+        nuget_user: ${{ inputs.nuget-user }}
 
     - name: Pack project
       shell: pwsh
@@ -142,12 +145,21 @@ runs:
         ACTION_PACKAGE_NAME: ${{ inputs.package-name }}
         ACTION_VERSION: ${{ inputs.version }}
 
+    # Exchanges the job's GitHub OIDC token for a nuget.org API key valid for 1 hour,
+    # so this runs right before the push.
+    - name: Log in to nuget.org
+      id: nuget-login
+      if: fromJSON(inputs.publish-to-nuget)
+      uses: NuGet/login@v1
+      with:
+        user: ${{ inputs.nuget-user }}
+
     - name: Publish to NuGet
       if: fromJSON(inputs.publish-to-nuget)
       shell: pwsh
       run: |
         dotnet nuget push "./out/$env:ACTION_PACKAGE_NAME.$env:ACTION_VERSION.nupkg" --api-key "$env:ACTION_API_KEY" --source https://api.nuget.org/v3/index.json
       env:
-        ACTION_API_KEY: ${{ inputs.nuget-api-key }}
+        ACTION_API_KEY: ${{ steps.nuget-login.outputs.NUGET_API_KEY }}
         ACTION_PACKAGE_NAME: ${{ inputs.package-name }}
         ACTION_VERSION: ${{ inputs.version }}
